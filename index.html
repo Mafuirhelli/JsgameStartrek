@@ -3,200 +3,524 @@
 <head>
     <meta charset="UTF-8">
     <title>Asteroids</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <canvas id="gameCanvas" width="700" height="500"></canvas>
-    <script>
-        const FPS = 30;
-        const SHIP_SIZE = 30; // высота в пикселях
-        const ASTER_NUM = 3;
-        const ASTER_SIZE = 100; // стартовый размер в пикселях
-        const ASTER_SPEED = 50; // стартовая скорость в пикселях в секунду
-        const ASTER_VERT = 10; // типичный уровень вершин в астеройде
-        const FRICTION = 1.28; // трение
-        const SHIP_THRUST = 10; // ускорение пиксель в секунду в квадратев
-        const TURN_SPEED = 360; //градусы в секунду
-        /** @type {HTMLCanvasElement} */
-        var canv = document.getElementById("gameCanvas");
-        var ctx = canv.getContext("2d");
-        var ship = {
-            // распологаем корабль посередине
+<main>
+    <div id="start" class="panel d-flex">
+        <div class="left d-flex justify-content-center align-items-center">
+            <div class="w-75 h-75 main d-flex flex-column justify-content-around align-items-center">
+                <h1 style="font-size: 48px">Asteroids</h1>
+                <div class="changeName d-flex flex-column  align-items-center" style="margin-top: -3vh">
+                    <h2>Введите ваше имя:</h2>
+                    <form class="d-flex justify-content-center">
+                        <input type="text" class="form-control" id="nameInput" placeholder="Ваше имя">
+                        <input type="submit" class="btn btn-success" id="startGame" value="Начать"
+                               style="color: #fff; margin-left: 10px">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="game" class="d-none">
+        <div class="info d-flex justify-content-around align-items-center">
+            <div class="d-flex flex-column justify-content-center">
+                <span>Имя игрока: <span id="name">Имя</span></span>
+            </div>
+            <div class="d-flex flex-column justify-content-center">
+                <span>Жизни: <span id="hp">3</span></span>
+            </div>
+            <div class="d-flex flex-column justify-content-center">
+                <span>Секундомер: <span id="timer">00:00</span></span>
+            </div>
+        </div>
+        <div class="elements">
+
+        </div>
+    </div>
+    <div id="end" class="panel d-none justify-content-center align-items-center">
+        <div class="w-25 h-50 main">
+            <h2><span id="playerName">Поздравляем, Имя!</span></h2>
+            <h2><span id="endTime">Ваше время: 00:00</span></h2>
+            <h2><span id="congratulation">Вы выиграли!</span></h2>
+        </div>
+    </div>
+</main>
+<canvas id="gameCanvas" width="2000" height="1500"></canvas>
+<script>
+    // константы
+    const FPS = 30;
+    const FRICTION = 0.7; // коэфицент трения
+    const BULLET_DIST = 0.6; // максимальное растояние сколько может пройти пулька
+    const BULLET_EXPLODE_DUR = 0.1; // длительность взрыва пульки
+    const BULLET_MAX = 10; // максимальное количество пулек одновременно
+    const BULLET_SPD = 500; // скорость пулек в пикселях в секунду
+    const ROID_JAG = 0.4; // ягольчатость астеройдов (0 = none, 1 = lots)
+    const ROID_NUM = 3; // стартовый набор астеройдов
+    const ROID_SIZE = 100; // стартовый размер астеройдов
+    const ROID_SPD = 50; // максимальная стартовая скорость
+    const ROID_VERT = 10; // сколько точек в астеройде обычно
+    const SHIP_BLINK_DUR = 0.1; // сколько секунд идет мигания кулдауна от урона
+    const SHIP_EXPLODE_DUR = 0.3; // сколько взрыв, в секундах
+    const SHIP_INV_DUR = 3; // сколько бессмертие
+    const SHIP_SIZE = 30; // высота коробля
+    const SHIP_THRUST = 5; // ускорение в пискелях в секунду квадратный(физика пригодилась, спасибо)
+    const SHIP_TURN_SPD = 360; // turn speed in degrees per second
+    const SHOW_BOUNDING = false; // show or hide collision bounding
+    const SHOW_CENTRE_DOT = false; // центральная точка коробля(видимость(по ней строится корабль)
+
+// игра начало
+    /** @type {HTMLCanvasElement} */
+    var canv = document.getElementById("gameCanvas");
+    var ctx = canv.getContext("2d");
+
+    // задаем корабль
+    var ship = newShip();
+
+    // задаем астеройды
+    var roids = [];
+    createAsteroidBelt();
+
+    // обработчики событий
+    document.addEventListener("keydown", keyDown);
+    document.addEventListener("keyup", keyUp);
+
+    // игровой цкил
+    setInterval(update, 1000 / FPS);
+
+    function createAsteroidBelt() {
+        roids = [];
+        var x, y;
+        for (var i = 0; i < ROID_NUM; i++) {
+            // Случайное расположение астероида (не касаясь корабля)
+            do {
+                x = Math.floor(Math.random() * canv.width);
+                y = Math.floor(Math.random() * canv.height);
+            } while (distBetweenPoints(ship.x, ship.y, x, y) < ROID_SIZE * 2 + ship.r);
+            roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 2)));
+        }
+    }
+
+    function destroyAsteroid(index) {
+        var x = roids[index].x;
+        var y = roids[index].y;
+        var r = roids[index].r;
+
+        // разделение астеройдов
+        if (r == Math.ceil(ROID_SIZE / 2)) { // большая блеба
+            roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 4)));
+            roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 4)));
+        } else if (r == Math.ceil(ROID_SIZE / 4)) { // средняя блеба
+            roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8)));
+            roids.push(newAsteroid(x, y, Math.ceil(ROID_SIZE / 8)));
+        }
+
+        // дестроооой
+        roids.splice(index, 1);
+    }
+
+    function distBetweenPoints(x1, y1, x2, y2) {
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
+    function explodeShip() {
+        ship.explodeTime = Math.ceil(SHIP_EXPLODE_DUR * FPS);
+    }
+    // если зажимаем
+    function keyDown(/** @type {KeyboardEvent} */ ev) {
+        switch(ev.keyCode) {
+            case 32: // пробельчик (пулька)
+                shootBullet();
+                break;
+            case 65: // ф (лево)
+                ship.rot = SHIP_TURN_SPD / 180 * Math.PI / FPS;
+                break;
+            case 87: // ц (Тяга)
+                ship.thrusting = true;
+                break;
+            case 68: // в arrow (право)
+                ship.rot = -SHIP_TURN_SPD / 180 * Math.PI / FPS;
+                break;
+        }
+    }
+    // если отжимаем
+    function keyUp(/** @type {KeyboardEvent} */ ev) {
+        switch(ev.keyCode) {
+            case 32: // пробельчик (пулька)
+                ship.canShoot = true;
+                break;
+            case 65: // ф ( стоп лево)
+                ship.rot = 0;
+                break;
+            case 87: // // ц (не Тяга)
+                ship.thrusting = false;
+                break;
+            case 68: // в (стоп право)
+                ship.rot = 0;
+                break;
+        }
+    }
+
+    function newAsteroid(x, y, r) {
+        var roid = {
+            x: x,
+            y: y,
+            xv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+            yv: Math.random() * ROID_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+            a: Math.random() * Math.PI * 2, // in radians
+            r: r,
+            offs: [],
+            vert: Math.floor(Math.random() * (ROID_VERT + 1) + ROID_VERT / 2)
+        };
+
+        // заполнение массива смещений
+        for (var i = 0; i < roid.vert; i++) {
+            roid.offs.push(Math.random() * ROID_JAG * 2 + 1 - ROID_JAG);
+        }
+
+        return roid;
+    }
+
+    function newShip() {
+        return {
             x: canv.width / 2,
             y: canv.height / 2,
+            a: 90 / 180 * Math.PI, // в радианы
             r: SHIP_SIZE / 2,
-
-            a: 90 / 180 * Math.PI, // перевод в радианы
+            blinkNum: Math.ceil(SHIP_INV_DUR / SHIP_BLINK_DUR),
+            blinkTime: Math.ceil(SHIP_BLINK_DUR * FPS),
+            canShoot: true,
+            explodeTime: 0,
+            bullets: [],
             rot: 0,
-
             thrusting: false,
             thrust: {
                 x: 0,
-                y: 0,
+                y: 0
             }
         }
-        // создание астеройдов
-            var roid = [];
-            createAsteroidBelt();
+    }
 
-        //настройка обработчика событий//
-        document.addEventListener("keydown", keyDown);
-        document.addEventListener("keyup", keyUp);
-        //установка лупа для игры//
-        setInterval(update, 1000 / FPS);
+    function shootBullet() {
+        // создание пульки
+        if (ship.canShoot && ship.bullets.length < BULLET_MAX) {
+            ship.bullets.push({ // из носа корабля
+                x: ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+                y: ship.y - 4 / 3 * ship.r * Math.sin(ship.a),
+                xv: BULLET_SPD * Math.cos(ship.a) / FPS,
+                yv: -BULLET_SPD * Math.sin(ship.a) / FPS,
+                dist: 0,
+                explodeTime: 0
+            });
+        }
 
-        function createAsteroidBelt() {
-            roid = [];
-            var x, y;
-            for(var i = 0; i< ASTER_NUM; i++){
-                x = Math.floor(Math.random() * canv.width);
-                y = Math.floor(Math.random() * canv.height);
-                roid.push(newAsteroid(x, y));
+        // запрещаем дальнейшие выстрелы
+        ship.canShoot = false;
+    }
+
+    function update() {
+        var blinkOn = ship.blinkNum % 2 == 0;
+        var exploding = ship.explodeTime > 0;
+
+        // рисуем пространство
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canv.width, canv.height);
+
+        // астеройдики
+        var a, r, x, y, offs, vert;
+        for (var i = 0; i < roids.length; i++) {
+            ctx.strokeStyle = "slategrey";
+            ctx.lineWidth = SHIP_SIZE / 20;
+
+            // получаем свойства астеройда
+            a = roids[i].a;
+            r = roids[i].r;
+            x = roids[i].x;
+            y = roids[i].y;
+            offs = roids[i].offs;
+            vert = roids[i].vert;
+
+            // рисуем путь
+            ctx.beginPath();
+            ctx.moveTo(
+                x + r * offs[0] * Math.cos(a),
+                y + r * offs[0] * Math.sin(a)
+            );
+
+            // рисуем полигоны
+            for (var j = 1; j < vert; j++) {
+                ctx.lineTo(
+                    x + r * offs[j] * Math.cos(a + j * Math.PI * 2 / vert),
+                    y + r * offs[j] * Math.sin(a + j * Math.PI * 2 / vert)
+                );
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // показать хитбоксы астеройда
+            if (SHOW_BOUNDING) {
+                ctx.strokeStyle = "lime";
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2, false);
+                ctx.stroke();
             }
         }
 
+        // тягаем корабль
+        if (ship.thrusting) {
+            ship.thrust.x += SHIP_THRUST * Math.cos(ship.a) / FPS;
+            ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
 
-        function keyDown(/** @type {KeyboardEvent} */ ev){
-            switch (ev.keyCode) {
-                case 65: // A (поворачивает корабль налево)
-                    ship.rot = TURN_SPEED / 180 * Math.PI / FPS;
-                    break;
-                case 87: // W (тягает корабль вперед)
-                    ship.thrusting = true;
-                    break;
-                case 68: // D (поворачивает корабль направо)
-                    ship.rot = -TURN_SPEED / 180 * Math.PI / FPS;
-                    break;
+            // сопло рисуем
+            if (!exploding && blinkOn) {
+                ctx.fillStyle = "red";
+                ctx.strokeStyle = "yellow";
+                ctx.lineWidth = SHIP_SIZE / 10;
+                ctx.beginPath();
+                ctx.moveTo( // rear left
+                    ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
+                    ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
+                );
+                ctx.lineTo( // rear centre (behind the ship)
+                    ship.x - ship.r * 5 / 3 * Math.cos(ship.a),
+                    ship.y + ship.r * 5 / 3 * Math.sin(ship.a)
+                );
+                ctx.lineTo( // rear right
+                    ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
+                    ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
+                );
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
             }
-         }
-         function keyUp(/** @type {KeyboardEvent} */ ev){
-            switch (ev.keyCode) {
-                case 65: // A отжимается (останавливает поворот налево)
-                    ship.rot = 0;
-                    break;
-                case 87: // W отжимается (остановка тяги)
-                    ship.thrusting = false;
-                    break;
-                case 68: // D отжимается (останавливает корабль направо)
-                    ship.rot = 0;
-                    break;
-            }
-         }
-         function newAsteroid(x, y){
-            var roid = {
-                x: x,
-                y: y,
-                xv: Math.random() * ASTER_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
-                yv: Math.random() * ASTER_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
-                r: ASTER_SIZE / 2,
-                a: Math.random() * Math.PI * 2,
-                vert: Math.floor(Math.random() * (ASTER_VERT+1) + ASTER_VERT / 2)
+        } else {
+            // применяем трение(когда сопло выключено)
+            ship.thrust.x -= FRICTION * ship.thrust.x / FPS;
+            ship.thrust.y -= FRICTION * ship.thrust.y / FPS;
+        }
 
-            };
-            return roid
-         }
-        function update(){
-            // отрисовка пространства
-                ctx.fillStyle = "black";
-                ctx.fillRect(0, 0, canv.width, canv.height);
-
-            // тяга корабля
-                if (ship.thrusting){
-                    ship.thrust.x += SHIP_THRUST * Math.cos(ship.a) / FPS;
-                    ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
-
-                    // сопло
-                    ctx.fillStyle = "Tomato"
-                    ctx.strokeStyle = "orange";
-                    ctx.lineWidth = SHIP_SIZE / 10;
-                    ctx.beginPath();
-                    ctx.moveTo( // огонь лево
-                        ship.x - ship.r * (2/3 * Math.cos(ship.a) + 0.25 * Math.sin(ship.a)),
-                        ship.y + ship.r * (2/3 * Math.sin(ship.a) - 0.25 * Math.cos(ship.a)),
-                    );
-                    ctx.lineTo( // огонь центр сзади корабля
-                        ship.x - ship.r * 6/3 * Math.cos(ship.a),
-                        ship.y + ship.r * 6/3 * Math.sin(ship.a),
-                    );
-                    ctx.lineTo( // огонь право
-                        ship.x - ship.r * (2/3 * Math.cos(ship.a) - 0.25 * Math.sin(ship.a)),
-                        ship.y + ship.r * (2/3 * Math.sin(ship.a) + 0.25 * Math.cos(ship.a)),
-                    );
-                    ctx.closePath();
-                    ctx.fill()
-                    ctx.stroke();
-                } else {
-                    ship.thrust.x -= FRICTION * ship.thrust.x / FPS;
-                    ship.thrust.y -= FRICTION * ship.thrust.y / FPS;
-
-                }
-            // отрисовка корабля
+        // рисуем треугольник(типа корабль не взрывается)
+        if (!exploding) {
+            if (blinkOn) {
                 ctx.strokeStyle = "white";
                 ctx.lineWidth = SHIP_SIZE / 20;
                 ctx.beginPath();
                 ctx.moveTo( // нос корабля
-                    ship.x + 4/3 * ship.r * Math.cos(ship.a),
-                    ship.y - 4/3 * ship.r * Math.sin(ship.a),
+                    ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+                    ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
                 );
-                ctx.lineTo( // левый тыл
-                    ship.x - ship.r * (2/3 * Math.cos(ship.a) + Math.sin(ship.a)),
-                    ship.y + ship.r * (2/3 * Math.sin(ship.a) - Math.cos(ship.a)),
+                ctx.lineTo( // левая часть
+                    ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
+                    ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
                 );
-            ctx.lineTo( // правый тыл
-                ship.x - ship.r * (2/3 * Math.cos(ship.a) - Math.sin(ship.a)),
-                ship.y + ship.r * (2/3 * Math.sin(ship.a) + Math.cos(ship.a)),
-            );
+                ctx.lineTo( // правая часть
+                    ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
+                    ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
+                );
                 ctx.closePath();
                 ctx.stroke();
-            // отрисовка астеройдов
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = SHIP_SIZE / 20;
-            var x, y, r, a, vert;
-            for (var i = 0; i < roid.length(); i++){
-                x = roid[i].x;
-                y = roid[i].y;
-                r = roid[i].r;
-                a = roid[i].a;
-                vert = roid[i].vert;
-                //отрисовка пути
-                ctx.beginPath();
-                ctx.moveTo(
-                    x + r * Math.cos(a),
-                    y + r * Math.sin(a),
-                );
-                //отрисовка полигона
-                for (var j = 0; j < vert; j++) {
-                    ctx.lineTo(
-                        x + r * Math.cos(a +j * Math.PI / 2 / vert ),
-                        y + r * Math.sin(a +j * Math.PI / 2 / vert )
-                    );
-                }
-                ctx.closePath();
-                ctx.stroke();
-                //движение астеройда
-                //прикасание к краю экрана
-            }
-            //поворот корабля
-            ship.a += ship.rot;
-            //движение корабля
-            ship.x += ship.thrust.x;
-            ship.y += ship.thrust.y;
-            // выход за экран
-            if (ship.x < 0 - ship.r) {
-                ship.x = canv.width + ship.r;
-            } else if (ship.x > canv.width + ship.r) {
-                ship.x = 0 - ship.r
-            }
-            if (ship.y < 0 - ship.r) {
-                ship.y = canv.height + ship.r;
-            } else if (ship.y > canv.height + ship.r) {
-                ship.y = 0 - ship.r
             }
 
-            //центральная точка
-            ctx.fillStyle = "cyan";
-            ctx.fillRect(ship.x - 1, ship.y - 1, 2, 3);
+            // обработка мигания
+            if (ship.blinkNum > 0) {
+
+                ship.blinkTime--;
+
+                // умеьшаем количество миганий
+                if (ship.blinkTime == 0) {
+                    ship.blinkTime = Math.ceil(SHIP_BLINK_DUR * FPS);
+                    ship.blinkNum--;
+                }
+            }
+        } else {
+            // рисование взрыва
+            ctx.fillStyle = "darkred";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r * 1.7, 0, Math.PI * 2, false);
+            ctx.fill();
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r * 1.4, 0, Math.PI * 2, false);
+            ctx.fill();
+            ctx.fillStyle = "orange";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r * 1.1, 0, Math.PI * 2, false);
+            ctx.fill();
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r * 0.8, 0, Math.PI * 2, false);
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r * 0.5, 0, Math.PI * 2, false);
+            ctx.fill();
         }
-    </script>
+
+        // хитбокс корабля
+        if (SHOW_BOUNDING) {
+            ctx.strokeStyle = "lime";
+            ctx.beginPath();
+            ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false);
+            ctx.stroke();
+        }
+
+        // центральная точка корабля
+        if (SHOW_CENTRE_DOT) {
+            ctx.fillStyle = "red";
+            ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+        }
+
+        // пульки
+        for (var i = 0; i < ship.bullets.length; i++) {
+            if (ship.bullets[i].explodeTime == 0) {
+                ctx.fillStyle = "salmon";
+                ctx.beginPath();
+                ctx.arc(ship.bullets[i].x, ship.bullets[i].y, SHIP_SIZE / 15, 0, Math.PI * 2, false);
+                ctx.fill();
+            } else {
+                // draw the eplosion
+                ctx.fillStyle = "orangered";
+                ctx.beginPath();
+                ctx.arc(ship.bullets[i].x, ship.bullets[i].y, ship.r * 0.75, 0, Math.PI * 2, false);
+                ctx.fill();
+                ctx.fillStyle = "salmon";
+                ctx.beginPath();
+                ctx.arc(ship.bullets[i].x, ship.bullets[i].y, ship.r * 0.5, 0, Math.PI * 2, false);
+                ctx.fill();
+                ctx.fillStyle = "pink";
+                ctx.beginPath();
+                ctx.arc(ship.bullets[i].x, ship.bullets[i].y, ship.r * 0.25, 0, Math.PI * 2, false);
+                ctx.fill();
+            }
+        }
+
+        // понимаем, попала ли пулька в астеройд
+        var ax, ay, ar, lx, ly;
+        for (var i = roids.length - 1; i >= 0; i--) {
+
+            // получаем свойства астеройда
+            ax = roids[i].x;
+            ay = roids[i].y;
+            ar = roids[i].r;
+
+            // перебираем лазеры
+            for (var j = ship.bullets.length - 1; j >= 0; j--) {
+
+                // получаем свойства лазера
+                lx = ship.bullets[j].x;
+                ly = ship.bullets[j].y;
+
+                // проверяем попадание
+                if (ship.bullets[j].explodeTime == 0 && distBetweenPoints(ax, ay, lx, ly) < ar) {
+
+                    destroyAsteroid(i);
+                    ship.bullets[j].explodeTime = Math.ceil(BULLET_EXPLODE_DUR * FPS);
+                    break;
+                }
+            }
+        }
+
+        // проверяем коллизию астеройда, если не исключения)
+        if (!exploding) {
+
+            if (ship.blinkNum == 0) {
+                for (var i = 0; i < roids.length; i++) {
+                    if (distBetweenPoints(ship.x, ship.y, roids[i].x, roids[i].y) < ship.r + roids[i].r) {
+                        explodeShip();
+                        destroyAsteroid(i);
+                        break;
+                    }
+                }
+            }
+
+            // поворот корабля
+            ship.a += ship.rot;
+
+            // двигает корабль
+            ship.x += ship.thrust.x;
+            ship.y += ship.thrust.y;
+        } else {
+
+            ship.explodeTime--;
+
+
+            if (ship.explodeTime == 0) {
+                ship = newShip();
+            }
+        }
+
+        // если за краями экрана
+        if (ship.x < 0 - ship.r) {
+            ship.x = canv.width + ship.r;
+        } else if (ship.x > canv.width + ship.r) {
+            ship.x = 0 - ship.r;
+        }
+        if (ship.y < 0 - ship.r) {
+            ship.y = canv.height + ship.r;
+        } else if (ship.y > canv.height + ship.r) {
+            ship.y = 0 - ship.r;
+        }
+
+        // двигаем пульку
+        for (var i = ship.bullets.length - 1; i >= 0; i--) {
+
+            // check distance travelled
+            if (ship.bullets[i].dist > BULLET_DIST * canv.width) {
+                ship.bullets.splice(i, 1);
+                continue;
+            }
+
+
+            if (ship.bullets[i].explodeTime > 0) {
+                ship.bullets[i].explodeTime--;
+
+                // время пульки ушло
+                if (ship.bullets[i].explodeTime == 0) {
+                    ship.bullets.splice(i, 1);
+                    continue;
+                }
+            } else {
+                // двигаем пульку
+                ship.bullets[i].x += ship.bullets[i].xv;
+                ship.bullets[i].y += ship.bullets[i].yv;
+
+                // calculate the distance travelled
+                ship.bullets[i].dist += Math.sqrt(Math.pow(ship.bullets[i].xv, 2) + Math.pow(ship.bullets[i].yv, 2));
+            }
+
+            // если за краями экрана
+            if (ship.bullets[i].x < 0) {
+                ship.bullets[i].x = canv.width;
+            } else if (ship.bullets[i].x > canv.width) {
+                ship.bullets[i].x = 0;
+            }
+            if (ship.bullets[i].y < 0) {
+                ship.bullets[i].y = canv.height;
+            } else if (ship.bullets[i].y > canv.height) {
+                ship.bullets[i].y = 0;
+            }
+        }
+
+        //двигаем астеройд
+        for (var i = 0; i < roids.length; i++) {
+            roids[i].x += roids[i].xv;
+            roids[i].y += roids[i].yv;
+
+            // если за краями экрана
+            if (roids[i].x < 0 - roids[i].r) {
+                roids[i].x = canv.width + roids[i].r;
+            } else if (roids[i].x > canv.width + roids[i].r) {
+                roids[i].x = 0 - roids[i].r
+            }
+            if (roids[i].y < 0 - roids[i].r) {
+                roids[i].y = canv.height + roids[i].r;
+            } else if (roids[i].y > canv.height + roids[i].r) {
+                roids[i].y = 0 - roids[i].r
+            }
+        }
+    }
+    // игра конец
+</script>
 </body>
 </html>
 

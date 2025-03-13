@@ -1,0 +1,109 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Orbitron";
+    font-optical-sizing: auto;
+    font-style: normal;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000000;
+    color: white;
+    background-size: 100% 100%;
+}
+
+.panel {
+    width: 100%;
+    height: 100%;
+}
+
+.left {
+    width: 40%;
+    height: 100%;
+}
+
+.changeName {
+    height: 15vh;
+}
+
+canvas {
+    width: 100vw;
+    height: 70vh;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+}
+
+.d-none {
+    display: none;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.w-75 {
+    width: 75%;
+}
+
+.h-75 {
+    height: 75%;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+/* Стилизация формы ввода имени */
+.form-control {
+    background-color: black;
+    color: white;
+    border: 2px solid white;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: white;
+    opacity: 0.7;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: 2px solid white;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-success:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
