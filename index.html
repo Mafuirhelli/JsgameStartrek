@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Startrek</title>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="container">
@@ -15,8 +18,9 @@
         </div>
 
         <button id="pauseButton" style="position: fixed; top: 10px; left: 90vw;">Пауза</button>
-        <canvas id="gameCanvas" width="1900" height="1050"></canvas>
+        <canvas id="gameCanvas" width="900" height="700"></canvas>
         <script>
+
             const FPS = 30; // количество кадров в секунду
             const FRICTION = 0.7; // коэффициент трения в космосе (0 = нет трения, 1 = сильное трение)
             const GAME_LIVES = 3; // начальное количество жизней
@@ -727,10 +731,12 @@
 
         </script>
         <img src="img/bezel.png" id="bezel">
+        <div class="fuzzy-overlay"></div>
     </div>
 
 </div>
-<div class="fuzzy-overlay"></div>
+<div class="crt-effect"></div>
+
 </body>
 </html>
 

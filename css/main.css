@@ -14,6 +14,7 @@ body {
     width: 100%;
     background-color: black;
 }
+
 h1{
     font-size: 150px;
 }
@@ -23,6 +24,27 @@ button{
     color: white;
     border-radius: 60px;
     border-width: 5px;
+    font-family: "DejaVu Sans Mono";
+    font-weight: bold;
+    text-shadow:5px 0 8px rgba(0, 180, 255,.8),
+    -5px 0 8px rgba(255, 70, 0,.8),
+    0 0 4px rgba(255, 199, 0,1);
+}
+
+canvas{
+    height: 100vh;
+    width: 100%;
+}
+
+body {
+    background: black;
+    color: white;
+    font-family: "Press Start 2P", system-ui;
+    font-weight: 400;
+    font-style: normal;
+    text-shadow:5px 0 8px rgba(0, 180, 255,.8),
+    -5px 0 8px rgba(255, 70, 0,.8),
+    0 0 4px rgba(255, 199, 0,1);
 }
 input{
     border-color: white;
@@ -30,17 +52,8 @@ input{
     color: white;
     border-radius: 60px;
     border-width: 5px;
-}
-canvas{
-    height: 100vh;
-    width: 100%;
-}
-
-
-
-body {
-    background: black;
-    color: white;
+    font-family: "DejaVu Sans Mono";
+    font-weight: bold;
 }
 
 .container {
@@ -61,15 +74,51 @@ body {
     position: relative;
 }
 
+.crt-effect {
+    content: " ";
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background-image: linear-gradient(
+            0deg,
+            transparent 50%,
+            rgba(0, 0, 0, 0.8) 10%
+    ),
+    linear-gradient(90deg, transparent 80%, rgba(0, 0, 0, 0.8) 10%);
+    background-size: 3px 3px;
+    pointer-events: none;
+}
+[fx="rgb-split"] {
+    backdrop-filter: blur(1px) url(#rgb-split);
+}
+@keyframes flicker {
+    0% { opacity: 0.9; }
+    50% { opacity: 1; }
+    100% { opacity: 0.9; }
+}
+
+#bezel{
+    position: absolute;
+    width: 104%;
+    height: 105%;
+    top: -50px;
+    left: -50px;
+    pointer-events: none;
+    background-size: cover;
+    z-index: 11;
+    backdrop-filter: invert(0.15) brightness(125%);
+}
+
 .fuzzy-overlay {
     position: absolute;
     inset: -200%;
-    background-image: url("../img/bezel.png"), url("../img/noise.png");
-    background-repeat: no-repeat;
-    backdrop-filter: sepia(25%);
-    filter: invert(2%);
-    z-index: 10;
-    pointer-events: none;
+    background-image: url("../img/noise.png");
+    opacity: 10%;
+    z-index: 4;
+     pointer-events: none;
 
     animation: shift 0.2s linear infinite both;
 }
@@ -82,17 +131,4 @@ body {
     100% {
         transform: translateX(-10%) translateY(-10%);
     }
-}
-#bezel{
-    position: absolute;
-    width: 104%;
-    height: 105%;
-    top: -50px;
-    left: -50px;
-    pointer-events: none;
-    background-size: cover;
-    z-index: 11;
-    backdrop-filter: invert(0.15) brightness(125%);
-
-
 }
