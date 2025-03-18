@@ -17,6 +17,7 @@ body {
 
 h1{
     font-size: 150px;
+    font-family: "Press Start 2P", system-ui;
 }
 button{
     border-color: white;
@@ -25,7 +26,6 @@ button{
     border-radius: 60px;
     border-width: 5px;
     font-family: "DejaVu Sans Mono";
-    font-weight: bold;
     text-shadow:5px 0 8px rgba(0, 180, 255,.8),
     -5px 0 8px rgba(255, 70, 0,.8),
     0 0 4px rgba(255, 199, 0,1);
@@ -39,9 +39,8 @@ canvas{
 body {
     background: black;
     color: white;
-    font-family: "Press Start 2P", system-ui;
-    font-weight: 400;
-    font-style: normal;
+    font-family: "DejaVu Sans Mono";
+    font-weight: bold;
     text-shadow:5px 0 8px rgba(0, 180, 255,.8),
     -5px 0 8px rgba(255, 70, 0,.8),
     0 0 4px rgba(255, 199, 0,1);
@@ -50,9 +49,9 @@ input{
     border-color: white;
     background-color: black;
     color: white;
+    font-family: "DejaVu Sans Mono";
     border-radius: 60px;
     border-width: 5px;
-    font-family: "DejaVu Sans Mono";
     font-weight: bold;
 }
 
@@ -109,7 +108,7 @@ input{
     pointer-events: none;
     background-size: cover;
     z-index: 11;
-    backdrop-filter: invert(0.15) brightness(125%);
+    backdrop-filter: invert(0.15) brightness(125%) sepia(5%);
 }
 
 .fuzzy-overlay {
