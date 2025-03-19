@@ -347,7 +347,7 @@
                     ctx.closePath();
                     ctx.stroke();
 
-                    // отображение круга столкновения астероида
+                    // отображение круга хитбокса астероида
                     if (SHOW_BOUNDING) {
                         ctx.strokeStyle = "lime";
                         ctx.beginPath();
@@ -431,7 +431,7 @@
                     ctx.fill();
                 }
 
-                // отображение круга столкновения корабля
+                // отображение круга хитбокса корабля
                 if (SHOW_BOUNDING) {
                     ctx.strokeStyle = "lime";
                     ctx.beginPath();
@@ -723,7 +723,7 @@
             }
 
             function startTimer() {
-                if (!isGamePaused) { // Добавьте эту проверку
+                if (!isGamePaused && !isTester && isGameRunning) {
                     gameTimer = setInterval(() => {
                         timeLeft--;
                         if (timeLeft <= 0) {
