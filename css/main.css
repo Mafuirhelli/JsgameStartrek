@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'Press Start 2P';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/PressStart2P-Regular.ttf') format('truetype');
+}
 *,
 *::before,
 *::after {
@@ -12,11 +18,25 @@ body {
     overflow-y: scroll;
     position: fixed;
     width: 100%;
-    background-color: black;
 }
-
+#startScreen{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+}
 h1{
     font-size: 150px;
+}
+.subtitle{
+    padding: 10px;
+}
+.portraits{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 button{
     border-color: white;
@@ -24,13 +44,17 @@ button{
     color: white;
     border-radius: 60px;
     border-width: 5px;
-    font-family: "Press Start 2P", system-ui;
+    font-family: 'Press Start 2P', system-ui;
     text-shadow:5px 0 8px rgba(0, 180, 255,.8),
     -5px 0 8px rgba(255, 70, 0,.8),
     0 0 4px rgba(255, 199, 0,1);
     box-shadow:5px 0 8px rgba(0, 180, 255,.8),
     -5px 0 8px rgba(255, 70, 0,.8),
     0 0 4px rgba(255, 199, 0,1);
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-top: 20px;
+
 }
 
 canvas{
@@ -42,7 +66,6 @@ body {
     background: black;
     color: white;
     font-family: "Press Start 2P", system-ui;
-    font-weight: bold;
     text-shadow:5px 0 8px rgba(0, 180, 255,.8),
     -5px 0 8px rgba(255, 70, 0,.8),
     0 0 4px rgba(255, 199, 0,1);
@@ -58,6 +81,8 @@ input{
     box-shadow:5px 0 8px rgba(0, 180, 255,.8),
     -5px 0 8px rgba(255, 70, 0,.8),
     0 0 4px rgba(255, 199, 0,1);
+    padding: 10px;
+    font-size: 16px;
 }
 
 .container {
@@ -122,7 +147,7 @@ input{
     background-image: url("../img/noise.png");
     opacity: 10%;
     z-index: 4;
-     pointer-events: none;
+    pointer-events: none;
 
     animation: shift 0.2s linear infinite both;
 }
@@ -142,6 +167,8 @@ input{
     cursor: pointer;
     border: 2px solid transparent;
     filter: sepia(45%);
+    user-drag: none;
+    user-select: none;
 }
 .portrait.selected {
     border: 2px solid yellow !important;

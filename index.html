@@ -4,29 +4,26 @@
     <meta charset="UTF-8">
     <title>Startrek</title>
     <link rel="stylesheet" href="css/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="container">
     <div class="content">
-        <div id="startScreen" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white;">
+        <div id="startScreen">
             <h1>Startrek</h1>
-            <input type="text" id="playerName" placeholder="Введите ваше имя" style="padding: 10px; font-size: 16px;"  maxlength="6">
-            <div id="portraitSelection" style="margin-top: 20px;">
-                <h3 style="padding: 10px;" >Выберите портрет:</h3>
-                <div style="display: flex; justify-content: center; gap: 10px;">
-                    <img src="img/11.png" class="portrait" data-portrait="11" >
-                    <img src="img/22.png" class="portrait" data-portrait="22">
-                    <img src="img/33.png" class="portrait" data-portrait="33">
-                    <img src="img/44.png" class="portrait" data-portrait="44">
-                    <img src="img/55.png" class="portrait" data-portrait="55">
-                    <img src="img/66.png" class="portrait" data-portrait="66">
-                    <img src="img/77.png" class="portrait" data-portrait="77">
+            <input type="text" id="playerName" placeholder="Введите ваше имя" maxlength="6">
+            <div id="portraitSelection">
+                <h3 class ="subtitle">Выберите портрет:</h3>
+                <div class="portraits">
+                    <img src="img/11.png" class="portrait" data-portrait="11" alt="spock">
+                    <img src="img/22.png" class="portrait" data-portrait="22" alt="kirk">
+                    <img src="img/33.png" class="portrait" data-portrait="33" alt="chekov">
+                    <img src="img/44.png" class="portrait" data-portrait="44" alt="scotty">
+                    <img src="img/55.png" class="portrait" data-portrait="55" alt="sulu">
+                    <img src="img/66.png" class="portrait" data-portrait="66" alt="uhura">
+                    <img src="img/77.png" class="portrait" data-portrait="77" alt="mccoy">
                 </div>
             </div>
-            <button id="startButton" style="padding: 10px 20px; font-size: 16px; margin-top: 20px;">Начать игру</button>
+            <button id="startButton">Начать игру</button>
         </div>
         <canvas id="gameCanvas" width="900" height="700"></canvas>
         <script>
@@ -62,12 +59,12 @@
 
 
             /** @type {HTMLCanvasElement} */
-            var canv = document.getElementById("gameCanvas");
-            var ctx = canv.getContext("2d");
+            let canv = document.getElementById("gameCanvas");
+            let ctx = canv.getContext("2d");
 
 
             // настройка параметров игры
-            var level, lives, roids, score, scoreHigh, ship, text, textAlpha;
+            let level, lives, roids, score, scoreHigh, ship, text, textAlpha;
             let gameTimer;
             let timeLeft = 120; // 2 минуты в секундах
             let isGamePaused = false;
@@ -106,8 +103,8 @@
 
             function createAsteroidBelt() {
                 roids = [];
-                var x, y;
-                for (var i = 0; i < ROID_NUM + level; i++) {
+                let x, y;
+                for (let i = 0; i < ROID_NUM + level; i++) {
                     // случайное расположение астероида (не касаясь корабля)
                     do {
                         x = Math.floor(Math.random() * canv.width);
@@ -119,9 +116,9 @@
 
 
             function destroyAsteroid(index) {
-                var x = roids[index].x;
-                var y = roids[index].y;
-                var r = roids[index].r;
+                let x = roids[index].x;
+                let y = roids[index].y;
+                let r = roids[index].r;
 
 
                 // разделить астероид на два, если необходимо
@@ -242,8 +239,8 @@
 
 
             function newAsteroid(x, y, r) {
-                var lvlMult = 1 + 0.1 * level;
-                var roid = {
+                let lvlMult = 1 + 0.1 * level;
+                let roid = {
                     x: x,
                     y: y,
                     xv: Math.random() * ROID_SPD * lvlMult / FPS * (Math.random() < 0.5 ? 1 : -1),
@@ -256,7 +253,7 @@
 
 
                 // заполнение массива смещений
-                for (var i = 0; i < roid.vert; i++) {
+                for (let i = 0; i < roid.vert; i++) {
                     roid.offs.push(Math.random() * ROID_JAG * 2 + 1 - ROID_JAG);
                 }
 
@@ -276,7 +273,7 @@
 
 
                 // получение рекорда из локального хранилища
-                var scoreStr = localStorage.getItem(SAVE_KEY_SCORE);
+                let scoreStr = localStorage.getItem(SAVE_KEY_SCORE);
                 if (scoreStr == null) {
                     scoreHigh = 0;
                 } else {
@@ -299,7 +296,7 @@
             function newShip() {
                 return {
                     x: canv.width / 2,
-                    y: canv.height / 2,
+                    y: canv.height-100,
                     a: 90 / 180 * Math.PI, // преобразование в радианы
                     r: SHIP_SIZE / 2,
                     blinkNum: Math.ceil(SHIP_INV_DUR / SHIP_BLINK_DUR),
@@ -339,8 +336,8 @@
 
             function update() {
                 if (!isGameRunning || isGamePaused) return; // Игра не запущена, выходим из функции
-                var blinkOn = ship.blinkNum % 2 == 0;
-                var exploding = ship.explodeTime > 0;
+                let blinkOn = ship.blinkNum % 2 == 0;
+                let exploding = ship.explodeTime > 0;
 
 
                 // отрисовка космоса
@@ -349,8 +346,8 @@
 
 
                 // отрисовка астероидов
-                var a, r, x, y, offs, vert;
-                for (var i = 0; i < roids.length; i++) {
+                let a, r, x, y, offs, vert;
+                for (let i = 0; i < roids.length; i++) {
                     ctx.strokeStyle = "slategrey";
                     ctx.lineWidth = SHIP_SIZE / 20;
 
@@ -373,7 +370,7 @@
 
 
                     // отрисовка полигона
-                    for (var j = 1; j < vert; j++) {
+                    for (let j = 1; j < vert; j++) {
                         ctx.lineTo(
                             x + r * offs[j] * Math.cos(a + j * Math.PI * 2 / vert),
                             y + r * offs[j] * Math.sin(a + j * Math.PI * 2 / vert)
@@ -491,7 +488,7 @@
 
 
                 // отрисовка пулек
-                for (var i = 0; i < ship.bullets.length; i++) {
+                for (let i = 0; i < ship.bullets.length; i++) {
                     if (ship.bullets[i].explodeTime == 0) {
                         ctx.fillStyle = "salmon";
                         ctx.beginPath();
@@ -527,8 +524,8 @@
 
 
                 // отрисовка жизней
-                var lifeColour;
-                for (var i = 0; i < lives; i++) {
+                let lifeColour;
+                for (let i = 0; i < lives; i++) {
                     lifeColour = exploding && i == lives - 1 ? "red" : "white";
                     drawShip(SHIP_SIZE + i * SHIP_SIZE * 1.2, SHIP_SIZE + 75, 0.5 * Math.PI, lifeColour);
                 }
@@ -597,8 +594,8 @@
                 ctx.fillText(timerText, (canv.width - SHIP_SIZE / 2), SHIP_SIZE * 2);
                 ctx.font = TEXT_SIZE + "px dejavu sans mono";
                 // обнаружение попаданий пулек в астероиды
-                var ax, ay, ar, lx, ly;
-                for (var i = roids.length - 1; i >= 0; i--) {
+                let ax, ay, ar, lx, ly;
+                for (let i = roids.length - 1; i >= 0; i--) {
 
 
                     // получение свойств астероида
@@ -608,7 +605,7 @@
 
 
                     // цикл по пулькам
-                    for (var j = ship.bullets.length - 1; j >= 0; j--) {
+                    for (let j = ship.bullets.length - 1; j >= 0; j--) {
 
 
                         // получение свойств пульки
@@ -635,7 +632,7 @@
 
                     // проверка только тогда, когда нет мигания
                     if (ship.blinkNum == 0 && !ship.dead) {
-                        for (var i = 0; i < roids.length; i++) {
+                        for (let i = 0; i < roids.length; i++) {
                             if (distBetweenPoints(ship.x, ship.y, roids[i].x, roids[i].y) < ship.r + roids[i].r) {
                                 explodeShip();
                                 destroyAsteroid(i);
@@ -683,7 +680,7 @@
 
 
                 // перемещение пулек
-                for (var i = ship.bullets.length - 1; i >= 0; i--) {
+                for (let i = ship.bullets.length - 1; i >= 0; i--) {
 
 
                     // проверка пройденного расстояния
@@ -729,7 +726,7 @@
 
 
                 // перемещение астероидов
-                for (var i = 0; i < roids.length; i++) {
+                for (let i = 0; i < roids.length; i++) {
                     roids[i].x += roids[i].xv;
                     roids[i].y += roids[i].yv;
 
